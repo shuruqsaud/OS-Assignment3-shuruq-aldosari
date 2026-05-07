@@ -1,8 +1,8 @@
 # Assignment 3 - Complete Documentation
 
-**Student Name**: [Your Full Name]  
-**Student ID**: [Your ID]  
-**Date Submitted**: [Submission Date]
+**Student Name**: [shuruq saud]  
+**Student ID**: [445052153]  
+**Date Submitted**: [7.5.2026]
 
 ---
 
@@ -31,43 +31,59 @@
 
 Document your development process with **minimum 3 entries** showing progression:
 
-### Entry 1 - [Date, Time]
-**What I implemented**: 
+### Entry 1 - May 5, 2026, 7:30 PM
 
-**Challenges encountered**: 
+What I implemented:
+I started by setting up the project and updating the student ID in the SchedulerSimulationSync.java file. I also reviewed the assignment requirements and identified the shared resources that may cause race conditions.
 
-**How I solved it**: 
+Challenges encountered:
+At first, I had difficulty understanding which variables needed synchronization and how race conditions happen in multithreaded programs.
 
-**Testing approach**: 
+How I solved it:
+I reviewed the shared variables carefully and identified the critical sections in the code such as counters and execution logs.
 
-**Time spent**: 
+Testing approach:
+I compiled and ran the program to make sure the project setup worked correctly before adding synchronization mechanisms.
 
----
-
-### Entry 2 - [Date, Time]
-**What I implemented**: 
-
-**Challenges encountered**: 
-
-**How I solved it**: 
-
-**Testing approach**: 
-
-**Time spent**: 
+Time spent:
+1 hour
 
 ---
 
-### Entry 3 - [Date, Time]
-**What I implemented**: 
+### Entry 2 - May 6, 2026, 5:00 PM
 
-**Challenges encountered**: 
+What I implemented:
+I added ReentrantLock to protect shared counter variables including contextSwitchCount, completedProcessCount, and totalWaitingTime.
 
-**How I solved it**: 
+Challenges encountered:
+I initially forgot to release the lock correctly, which could lead to deadlock problems.
 
-**Testing approach**: 
+How I solved it:
+I used try-finally blocks to guarantee that unlock() is always executed even if an error occurs.
 
-**Time spent**: 
+Testing approach:
+I executed the program several times and verified that the counters displayed consistent and correct values.
 
+Time spent:
+2 hours
+---
+
+### Entry 3 - May 7, 2026, 8:15 PM
+
+What I implemented:
+I added synchronization for the execution log using ReentrantLock and implemented a binary Semaphore to control CPU access.
+
+Challenges encountered:
+I faced issues understanding how Semaphore controls thread access to shared resources.
+
+How I solved it:
+I studied the Semaphore behavior and used a single permit to ensure only one process can access the CPU section at a time.
+
+Testing approach:
+I ran the simulation multiple times and checked that the execution log worked correctly without errors and that processes executed consistently.
+
+Time spent:
+2 hours
 ---
 
 ### Entry 4 - [Date, Time]
@@ -105,7 +121,9 @@ Document your development process with **minimum 3 entries** showing progression
 - What incorrect behavior could occur?
 
 **Your Answer**:
+One race condition in the original code happens with the shared counter variable `contextSwitchCount`. This variable is updated every time the scheduler switches to another process, for example: `contextSwitchCount++`. If multiple threads update this counter at the same time, one update may overwrite another update. This can cause the final number of context switches to be lower or incorrect.
 
+A second race condition happens with the shared `executionLog` ArrayList. The program adds log messages during process execution, for example: `executionLog.add(process.getName() + " completed execution");`. Since `ArrayList` is not thread-safe, concurrent access by multiple threads can corrupt the list or cause inconsistent log entries. It could also lead to errors such as `ConcurrentModificationException` or missing log messages.
 [Your answer here - 4-6 sentences with code examples]
 
 ---
@@ -114,7 +132,9 @@ Document your development process with **minimum 3 entries** showing progression
 **Q**: Explain the difference between ReentrantLock and Semaphore. Where did you use each in your code and why?
 
 **Your Answer**:
+ReentrantLock is used to protect critical sections of code and allows only one thread to access shared data at a time. In my code, I used ReentrantLock to protect shared counter variables such as `contextSwitchCount`, `completedProcessCount`, and `totalWaitingTime`. I also used it for the `executionLog` ArrayList because multiple threads may try to modify it simultaneously.
 
+Semaphore is used to control access to a shared resource by limiting the number of threads that can enter a section at the same time. In my implementation, I used a binary Semaphore with one permit to control CPU access. This ensures that only one process can execute in the CPU section at a time, which simulates real CPU scheduling behavior and prevents concurrent execution conflicts.
 [Your answer here - explain your implementation choices]
 
 ---
@@ -123,7 +143,11 @@ Document your development process with **minimum 3 entries** showing progression
 **Q**: What is deadlock? Explain TWO prevention techniques and what you did to prevent deadlocks in your code.
 
 **Your Answer**:
+Deadlock is a situation where two or more threads are waiting for each other to release resources, causing the program to stop progressing. This usually happens when threads hold locks and wait indefinitely for another lock.
 
+One deadlock prevention technique is using `try-finally` blocks. In my code, I used `try-finally` whenever I used `ReentrantLock` or `Semaphore`. This guarantees that `unlock()` and `release()` are always executed even if an exception occurs.
+
+Another prevention technique is avoiding unnecessary nested locks and keeping lock usage simple. In my implementation, I used separate locks for counters and execution logs and avoided holding multiple locks for a long time. This reduces the possibility of circular waiting between threads and helps prevent deadlocks.
 [Your answer here - reference try-finally blocks, lock ordering, etc.]
 
 ---
@@ -136,23 +160,34 @@ Document your development process with **minimum 3 entries** showing progression
 - Given that the three counters are independent, which approach provides better concurrency and why?
 
 **Your Answer**:
-
+For Task 1, I used one lock for the three counters, which is a coarse-grained locking approach. I made this choice because it is simpler to implement, easier to read, and reduces the chance of making synchronization mistakes. The trade-off is that coarse-grained locking can reduce concurrency because only one thread can update any counter at a time. Fine-grained locking uses a separate lock for each counter, which allows different threads to update different counters at the same time. This improves concurrency but makes the code more complex and harder to manage. Since the three counters are independent, fine-grained locking would provide better concurrency because each counter could be protected separately. However, for this assignment, one lock is acceptable because the counter updates are short and the design is easier to verify.
 [Your answer here - explain coarse-grained vs fine-grained locking, independence of counters, concurrency implications. Show understanding of when to use each approach. 5-8 sentences expected.]
 
 ---
 
-## Part 3: Synchronization Analysis (1 mark)
-
 ### Critical Section #1: Counter Variables
 
-**Which variables**: 
+**Which variables**:  
+`contextSwitchCount`, `completedProcessCount`, and `totalWaitingTime`
 
-**Why they need protection**: 
+**Why they need protection**:  
+These variables are shared between threads and may be updated during process execution. Without synchronization, two threads could update the same counter at the same time, causing lost updates or incorrect final statistics.
 
-**Synchronization mechanism used**: 
+**Synchronization mechanism used**:  
+I used `ReentrantLock` to make sure only one thread can update the counter variables at a time.
 
 **Code snippet**:
 ```java
+private static final ReentrantLock counterLock = new ReentrantLock();
+
+public static void incrementContextSwitchCount() {
+    counterLock.lock();
+    try {
+        contextSwitchCount++;
+    } finally {
+        counterLock.unlock();
+    }
+}
 // Paste your implementation here
 ```
 
@@ -194,47 +229,19 @@ Document your development process with **minimum 3 entries** showing progression
 
 ---
 
-## Part 4: Testing and Verification (2 marks)
+## Part 4: Testing and Verification
 
 ### Test 1: Consistency Check
 **What I tested**: Running program multiple times to verify consistent results
 
-**Testing procedure**: 
+**Testing procedure**:
 ```bash
-# Commands used (run the program at least 5 times)
-```
-
-**Results**: 
-(Show that running multiple times produces consistent, correct results)
-
-**Why synchronization is necessary**: 
-(Explain what race conditions COULD occur without synchronization, even if you didn't observe them. Explain which shared resources need protection and why.)
-
-**Conclusion**: 
-
----
-
-### Test 2: Exception Testing
-**What I tested**: Checking for ConcurrentModificationException
-
-**Testing procedure**: 
-
-**Results**: 
-
-**What this proves**: 
-
----
-
-### Test 3: Correctness Verification
-**What I tested**: Verifying correct final values (total burst time, context switches, etc.)
-
-**Expected values**: 
-
-**Actual values**: 
-
-**Analysis**: 
-
----
+javac SchedulerSimulationSync.java
+java SchedulerSimulationSync
+java SchedulerSimulationSync
+java SchedulerSimulationSync
+java SchedulerSimulationSync
+java SchedulerSimulationSync
 
 ### Test 4: Different Scenarios
 **Scenario tested**: [e.g., different time quantum, more processes, etc.]
