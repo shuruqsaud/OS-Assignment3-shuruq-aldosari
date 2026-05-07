@@ -179,6 +179,10 @@ class Process implements Runnable {
         } finally {
             sharedResources.cpuSemaphore.release();
         }
+         } catch (InterruptedException e) {
+              System.out.println(Colors.RED + "  ✗ " + name + " was interrupted while waiting for CPU." + Colors.RESET);
+            }
+
     }
     
     private String createProgressBar(int progress, int width) {
